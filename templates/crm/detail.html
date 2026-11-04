@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3>{{ singular }} Details</h3>
+  <div>
+    <a class="btn btn-outline-primary" href="{% url prefix|add:'_edit' object.pk %}">Edit</a>
+    {% if not user.is_sales %}<a class="btn btn-outline-danger" href="{% url prefix|add:'_delete' object.pk %}">Delete</a>{% endif %}
+    <a class="btn btn-secondary" href="{% url prefix|add:'_list' %}">Back</a>
+  </div>
+</div>
+<div class="card mb-3"><div class="card-body"><dl class="row mb-0">
+  {% for label, value in fields %}
+    <dt class="col-sm-3">{{ label }}</dt><dd class="col-sm-9">{{ value|default_if_none:"-" }}</dd>
+  {% endfor %}
+</dl></div></div>
+
+{% if prefix == 'lead' and object.status == 'Qualified' %}
+<form method="post" action="{% url 'lead_convert' object.pk %}" class="mb-3">{% csrf_token %}
+  <button class="btn btn-success">Convert to Customer &amp; Opportunity</button>
+</form>
+{% endif %}
+
+{% if prefix == 'followup' and object.status == 'Planned' %}
+<div class="card mb-3"><div class="card-body d-flex flex-wrap gap-3 align-items-end">
+  <form method="post" action="{% url 'followup_complete' object.pk %}">{% csrf_token %}
+    <button class="btn btn-success">Mark Completed</button></form>
+  <form method="post" action="{% url 'followup_reschedule' object.pk %}" class="d-flex gap-2">{% csrf_token %}
+    <input type="date" name="follow_up_date" class="form-control" required>
+    <button class="btn btn-warning">Reschedule</button></form>
+</div></div>
+{% endif %}
+
+{% for label, items in history %}
+<div class="card mb-3"><div class="card-header">{{ label }}</div>
+  <ul class="list-group list-group-flush">
+    {% for i in items %}<li class="list-group-item">{{ i }} <span class="badge bg-secondary">{{ i.status }}</span></li>
+    {% empty %}<li class="list-group-item text-muted">None</li>{% endfor %}
+  </ul></div>
+{% endfor %}
+{% endblock %}

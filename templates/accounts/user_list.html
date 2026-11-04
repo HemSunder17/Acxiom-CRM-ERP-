@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %}Users & Roles{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3>Users &amp; Roles</h3>
+  <a class="btn btn-primary" href="{% url 'user_create' %}"><i class="bi bi-person-plus"></i> New User</a>
+</div>
+<form method="get" class="row g-2 mb-3">
+  <div class="col-md-3"><input name="q" class="form-control" placeholder="Search name, username, email" value="{{ f.q }}"></div>
+  <div class="col-md-2">
+    <select name="role" class="form-select"><option value="">Role: All</option>
+      {% for v, l in roles %}<option value="{{ v }}" {% if v == f.role %}selected{% endif %}>{{ l }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-md-2">
+    <select name="status" class="form-select"><option value="">Status: All</option>
+      <option value="active" {% if f.status == 'active' %}selected{% endif %}>Active</option>
+      <option value="inactive" {% if f.status == 'inactive' %}selected{% endif %}>Inactive</option>
+      <option value="locked" {% if f.status == 'locked' %}selected{% endif %}>Locked</option>
+    </select>
+  </div>
+  <div class="col-auto"><button class="btn btn-outline-primary">Filter</button> <a class="btn btn-outline-secondary" href="?">Reset</a></div>
+</form>
+<div class="table-responsive">
+<table class="table table-striped bg-white align-middle">
+  <thead class="table-dark"><tr><th>Username</th><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Lockout</th><th></th></tr></thead>
+  <tbody>
+  {% for u in page_obj %}
+    <tr>
+      <td>{{ u.username }}</td>
+      <td>{{ u.get_full_name|default:"-" }}</td>
+      <td>{{ u.email }}</td>
+      <td><span class="badge bg-info">{{ u.get_role_display }}</span></td>
+      <td><span class="badge bg-{% if u.is_active %}success{% else %}secondary{% endif %}">{% if u.is_active %}Active{% else %}Inactive{% endif %}</span></td>
+      <td>{% if u.is_locked_out %}<span class="badge bg-danger">Locked until {{ u.lockout_end|date:"H:i" }}</span>{% else %}-{% endif %}</td>
+      <td class="text-end text-nowrap">
+        <a class="btn btn-sm btn-outline-secondary" href="{% url 'user_edit' u.pk %}">Edit</a>
+        <a class="btn btn-sm btn-outline-warning" href="{% url 'user_reset_password' u.pk %}">Reset Password</a>
+        {% if u.is_locked_out %}
+        <form method="post" action="{% url 'user_unlock' u.pk %}" class="d-inline">{% csrf_token %}
+          <button class="btn btn-sm btn-outline-danger">Unlock</button></form>
+        {% endif %}
+      </td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="7" class="text-center text-muted py-4">No users found.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% if page_obj.paginator.num_pages > 1 %}
+<nav><ul class="pagination">
+  {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?{{ qs }}&page={{ page_obj.previous_page_number }}">Previous</a></li>{% endif %}
+  <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+  {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?{{ qs }}&page={{ page_obj.next_page_number }}">Next</a></li>{% endif %}
+</ul></nav>
+{% endif %}
+
+<div class="card mt-4"><div class="card-header">Role Permissions</div>
+<div class="table-responsive"><table class="table table-sm mb-0">
+  <thead><tr><th>Module</th><th>Admin</th><th>Manager</th><th>Sales Executive</th></tr></thead>
+  <tbody>
+    <tr><td>Customers / Leads / Opportunities / Follow-Ups</td><td>Full</td><td>Team, can delete</td><td>Own/assigned, no delete</td></tr>
+    <tr><td>Users &amp; Roles</td><td>Full</td><td>No</td><td>No</td></tr>
+    <tr><td>Audit Log</td><td>Full</td><td>No</td><td>No</td></tr>
+    <tr><td>Dashboard / API</td><td>All data</td><td>Team data</td><td>Own data</td></tr>
+  </tbody>
+</table></div></div>
+{% endblock %}

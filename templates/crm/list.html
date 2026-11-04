@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3>{{ title }}</h3>
+  <a class="btn btn-primary" href="{% url prefix|add:'_create' %}"><i class="bi bi-plus-lg"></i> New {{ singular }}</a>
+</div>
+<form method="get" class="row g-2 mb-3">
+  <div class="col-md-3"><input name="q" class="form-control" placeholder="Search..." value="{{ request.GET.q }}"></div>
+  {% for f in filters %}
+  <div class="col-md-2">
+    {% if f.kind == 'date' %}
+      <input type="date" name="{{ f.param }}" class="form-control" value="{{ f.value }}">
+    {% else %}
+      <select name="{{ f.param }}" class="form-select">
+        <option value="">{{ f.label }}: All</option>
+        {% for c in f.choices %}<option value="{{ c.0 }}" {% if c.0|stringformat:"s" == f.value %}selected{% endif %}>{{ c.1 }}</option>{% endfor %}
+      </select>
+    {% endif %}
+  </div>
+  {% endfor %}
+  <div class="col-auto"><button class="btn btn-outline-primary">Filter</button> <a class="btn btn-outline-secondary" href="?">Reset</a></div>
+</form>
+<div class="table-responsive">
+<table class="table table-striped table-hover bg-white align-middle">
+  <thead class="table-dark"><tr>{% for h in headers %}<th>{{ h }}</th>{% endfor %}<th></th></tr></thead>
+  <tbody>
+  {% for o, cells in rows %}
+    <tr>{% for c in cells %}<td>{{ c|default_if_none:"-" }}</td>{% endfor %}
+      <td class="text-end text-nowrap">
+        <a class="btn btn-sm btn-outline-primary" href="{% url prefix|add:'_detail' o.pk %}">View</a>
+        <a class="btn btn-sm btn-outline-secondary" href="{% url prefix|add:'_edit' o.pk %}">Edit</a>
+        {% if not user.is_sales %}<a class="btn btn-sm btn-outline-danger" href="{% url prefix|add:'_delete' o.pk %}">Delete</a>{% endif %}
+      </td></tr>
+  {% empty %}
+    <tr><td colspan="20" class="text-center text-muted py-4">No records found.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% if is_paginated %}
+<nav><ul class="pagination">
+  {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?{{ qs }}&page={{ page_obj.previous_page_number }}">Previous</a></li>{% endif %}
+  <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ paginator.num_pages }}</span></li>
+  {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?{{ qs }}&page={{ page_obj.next_page_number }}">Next</a></li>{% endif %}
+</ul></nav>
+{% endif %}
+{% endblock %}
