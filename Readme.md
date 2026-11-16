@@ -13,7 +13,7 @@ Django ORM instead of EF Core, DRF serializers instead of DTOs).
     python manage.py runserver
 
 ## Demo accounts
-admin / Admin@12345, manager1 / Manager@12345, sales1 / Sales@12345, sales2 / Sales@12345
+admin / Hem@1234, Hem/ Hem@1234
 
 ## Features
 Authentication with password policy and lockout, role-based server-side scoping, CRUD for Customers, Leads,
